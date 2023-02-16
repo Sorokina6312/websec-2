@@ -1,4 +1,5 @@
 let saved_stop = []
+let map;
 
 window.onload = async () => {
     if(localStorage.getItem('saved_stop')!=null){
@@ -7,7 +8,7 @@ window.onload = async () => {
     }
 
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2luZS1hbGlzIiwiYSI6ImNraHYxamh4MTEydm8ycnBpamlxeXc3ZmUifQ.VaDR_QSf9xan1ksiBSNejA';
-    const map = new mapboxgl.Map({
+    map = new mapboxgl.Map({
         container: 'map',
         pitch: 50, //если будет подвисать - закомментируйте этот параметр
         //style: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -38,6 +39,7 @@ window.onload = async () => {
                 console.log(stop)
                 let stop_info = await getFirstArrivalToStop(stop.KS_ID)
                 let popup_window = document.createElement("div");
+                popup_window.className = "popup-window"
                 let popup_title = document.createElement("h2");
                 popup_title.textContent = stop.title
                 popup_window.append(popup_title)
@@ -55,12 +57,12 @@ window.onload = async () => {
 
                 const save_stop_button = document.createElement("button");
                 save_stop_button.textContent = "Избранное"
+                save_stop_button.className = "save-stop-button"
 
                 save_stop_button.addEventListener("click", ()=>{
                     if(checkInSaved(stop.KS_ID)){
                         saved_stop = saved_stop.filter((filter_stop) => { return filter_stop.KS_ID !== stop.KS_ID });
                         regenerateSavedStop()
-                        console.log("Add")
                     }
                     else
                     {
@@ -80,14 +82,10 @@ window.onload = async () => {
                 })
 
                 popup_window.append(save_stop_button)
-                save_stop_button.onclick = () =>{console.log("dsdadsa")}
 
-                popup.setHTML(
-                    popup_window.innerHTML
+                popup.setDOMContent(
+                    popup_window
                 )
-
-                save_stop_button.onclick = () =>{console.log("dsdadsa")}
-                console.log(stop_info)
             });
 
             new mapboxgl.Marker({color: 'red'})
@@ -141,12 +139,17 @@ function regenerateSavedStop(){
     window_saved_stop.innerHTML = ''
     saved_stop.map(stop =>{
         let transport_saved_stop = document.createElement("div")
+        transport_saved_stop.className = "transport-saved-stop-info"
         let transport_saved_stop_title = document.createElement("h2");
         transport_saved_stop_title.textContent = stop.title
         transport_saved_stop.append(transport_saved_stop_title)
         let transport_saved_stop_subtitle = document.createElement("h4");
         transport_saved_stop_subtitle.textContent = stop.info
         transport_saved_stop.append(transport_saved_stop_subtitle)
+        transport_saved_stop.addEventListener("click", ()=>{
+            map.setCenter({lng: stop.metrics.y, lat: stop.metrics.x})
+            map.setZoom(14)
+        })
         window_saved_stop.append(transport_saved_stop)
     })
 }
